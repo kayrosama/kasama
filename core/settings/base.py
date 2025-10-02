@@ -98,7 +98,7 @@ SIMPLE_JWT = {
 }
 
 # Modelo de usuario personalizado
-AUTH_USER_MODEL = 'core_user.Usuario'
+AUTH_USER_MODEL = 'core_user.CustomUser'
 
 # Configuracion para captura de logs
 LOGGING = {
