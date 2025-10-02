@@ -16,12 +16,22 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+# Rutas por módulo
+import core_auth.router as auth_router
+import core_user.router as user_router
+import core_common.router as common_router
 
 urlpatterns = [
+    # Admin de Django
     path('admin/', admin.site.urls),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/', include('core_user.router')),
-    path('api/', include('core_auth.router')),
+
+    # Autenticación JWT y rutas protegidas
+    path('api/auth/', include(auth_router.urlpatterns)),
+
+    # Endpoints de usuario
+    path('api/user/', include(user_router.urlpatterns)),
+
+    # Utilidades comunes (permisos, vistas protegidas, etc.)
+    path('api/common/', include(common_router.urlpatterns)),
 ]

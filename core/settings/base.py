@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-import os
+from core.settings import bdd
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 LOGGING_DIR = os.path.join(BASE_DIR, 'logs')
@@ -8,17 +8,28 @@ os.makedirs(LOGGING_DIR, exist_ok=True)
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "your-secret-key")
 
-INSTALLED_APPS = [
+# Application definition
+
+DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
-    'core_user',
-    'core_auth',
 ]
+
+THIRD_PARTY_APPS = [
+    'rest_framework',
+    #'drf_yasg',
+]
+
+LOCAL_APPS = [
+    'core_auth',
+    'core_user',
+]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -50,12 +61,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+DATABASES = bdd.SQLITE 
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -106,23 +112,39 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
+            'format': '{asctime} [{levelname}] {name}: {message}',
             'style': '{',
         },
     },
     'handlers': {
-        'file': {
+        'systemout_file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': os.path.join(LOGGING_DIR, 'SystemOut.log'),
             'formatter': 'verbose',
         },
+        'honeypot_file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOGGING_DIR, 'HoneyPot.log'),
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
-        'django': {
-            'handlers': ['file'],
+        'filemon': {
+            'handlers': ['systemout_file'],
             'level': 'INFO',
-            'propagate': True,
+            'propagate': False,
+        },
+        'honeypot': {
+            'handlers': ['honeypot_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['systemout_file'],
+            'level': 'WARNING',
+            'propagate': False,
         },
     },
 }
