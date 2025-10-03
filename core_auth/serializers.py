@@ -1,16 +1,18 @@
+from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from core_user.models import CustomUser
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        # Campos personalizados en el token
-        token['email'] = user.email
-        token['rol'] = user.rol
-        return token
-
+    """
+    Serializer personalizado para login con JWT usando email.
+    """
     def validate(self, attrs):
-        # Usamos email como identificador
-        attrs['username'] = attrs.get('email')
-        return super().validate(attrs)
+        data = super().validate(attrs)
+        data.update({"user_id": self.user.id, "email": self.user.email})
+        return data
+
+class LogoutSerializer(serializers.Serializer):
+    """
+    Serializer para recibir el refresh token en el logout.
+    """
+    refresh = serializers.CharField()
+    

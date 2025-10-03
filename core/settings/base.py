@@ -1,15 +1,19 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv  # ← Agrega esto
+from datetime import timedelta
 from core.settings import bdd
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 LOGGING_DIR = os.path.join(BASE_DIR, 'logs')
 os.makedirs(LOGGING_DIR, exist_ok=True)
+load_dotenv(os.path.join(BASE_DIR, '.env'))  # ← Agrega esto
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "your-secret-key")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("DJANGO_SECRET_KEY no está definido en el entorno.")
 
 # Application definition
-
 DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -21,7 +25,8 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     'rest_framework',
-    #'drf_yasg',
+    'drf_spectacular',
+    'corsheaders',
 ]
 
 LOCAL_APPS = [
@@ -32,6 +37,7 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -61,7 +67,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-DATABASES = bdd.SQLITE 
+DATABASES = bdd.SQLITE
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -75,12 +81,13 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'es-es'
 TIME_ZONE = 'UTC'
 USE_I18N = True
-USE = True
+USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Configuracion de Django REST Framework y JWT
+# Django REST Framework y JWT
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -88,10 +95,25 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_SCHEMA_CLASS': (
+        'drf_spectacular.openapi.AutoSchema',
+    ),
 }
 
-# Configuracion JWT
-from datetime import timedelta
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Kayro Sama, Inc.',
+    'DESCRIPTION': 'REST API BASE',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': True,
+    'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
@@ -103,10 +125,8 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-# Modelo de usuario personalizado
 AUTH_USER_MODEL = 'core_user.CustomUser'
 
-# Configuracion para captura de logs
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -118,7 +138,7 @@ LOGGING = {
     },
     'handlers': {
         'systemout_file': {
-            'level': 'INFO',
+            'level': 'WARNING',
             'class': 'logging.FileHandler',
             'filename': os.path.join(LOGGING_DIR, 'SystemOut.log'),
             'formatter': 'verbose',
@@ -133,7 +153,7 @@ LOGGING = {
     'loggers': {
         'filemon': {
             'handlers': ['systemout_file'],
-            'level': 'INFO',
+            'level': 'WARNING',
             'propagate': False,
         },
         'honeypot': {
@@ -148,3 +168,9 @@ LOGGING = {
         },
     },
 }
+
+# CORS para desarrollo
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]

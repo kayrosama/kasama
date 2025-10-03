@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 # Rutas por módulo
 import core_auth.router as auth_router
@@ -34,4 +35,8 @@ urlpatterns = [
 
     # Utilidades comunes (permisos, vistas protegidas, etc.)
     path('api/common/', include(common_router.urlpatterns)),
+
+    # Docs
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
